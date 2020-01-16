@@ -1,12 +1,28 @@
-$tenantId = Get-AutomationVariable -Name 'tenantID'
+
+
+#Authenticate to Azure
+if (Get-AutomationVariable -Name 'RunAsUserAuth'){
+
+        $connectionName = "AzureRunAsConnection"
+        $spConn = Get-AutomationConnection -Name $connectionName
+
+        Login-AzureRmAccount -TenantId $spConn.TenantId -ServicePrincipal -ApplicationId $spConn.ApplicationId -CertificateThumbprint $spConn.CertificateThumbprint
+
+}
+else{
+
+    #Login using a supplied service principal
+    $tenantId = Get-AutomationVariable -Name 'tenantID'
+    $certThumbrint = Get-AutomationVariable -Name 'certThumbprint'
+    $applicationId = Get-AutomationVariable -Name 'applicationID'
+    Login-AzureRmAccount -TenantId $tenantId -ServicePrincipal -CertificateThumbprint $certThumbrint -ApplicationId $applicationId
+}
+
+#Connect to the subscription
 $subscriptionId = Get-AutomationVariable -Name 'subscriptionID'
-$certThumbrint = Get-AutomationVariable -Name 'certThumbprint'
-$applicationId = Get-AutomationVariable -Name 'applicationID'
-
-Login-AzureRmAccount -TenantId $tenantId -ServicePrincipal -CertificateThumbprint $certThumbrint -ApplicationId $applicationId
-Select-AzureRmSubscription -SubscriptionId $subscriptionId
-
 $subscriptionName = "BG Dev/Test"
+
+Select-AzureRmSubscription -SubscriptionId $subscriptionId
 
 #get a list of all the current Azure resources
 $resources = Get-AzureRmResource #| Export-Csv "bgdevtest_resources.csv"
